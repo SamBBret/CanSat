@@ -20,3 +20,11 @@ def get_dht22():
         return 0.0, 0.0
         
     time.sleep(0.5)
+
+while True:
+    time.sleep(0.5)
+    inside_temp, inside_hum = get_dht22()
+    #accel_values, gyro_values, mag_values = mpu.get_all_sensor_data()
+
+    print("Temperatura:" + str(inside_temp))
+    print("Humidade:" + str(inside_hum))
