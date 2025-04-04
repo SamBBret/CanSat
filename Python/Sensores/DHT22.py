@@ -11,7 +11,7 @@ def get_dht22():
         humidity = sensor.humidity            
         return temperature_c, humidity
     except RuntimeError as error:
-        print("Sensor NÃ£o Encontrado")
+        print("Sensor NÃO Encontrado")
         time.sleep(0.2)
         return 0.0, 0.0
 
