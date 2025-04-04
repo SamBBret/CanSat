@@ -5,31 +5,33 @@ from time import sleep
 import os
 
 mode = 0   # terminal = 1 Interface = 0
-#mpu = MPU9250()
+
+
+# Verifical se o sensor retornou uma variavel real
+def verify_value(val):
+    return val if val is not None else "N/A"
+
+
 
 def update():
-    inside_temp, inside_hum = get_dht22()
-    #accel_values, gyro_values, mag_values = 0 #mpu.get_all_sensor_data()
+    inside_temp, inside_hum = verify_value(get_dht22())
+    accel_values, gyro_values, mag_values = verify_value(0) #mpu.get_all_sensor_data()
     
-    if inside_hum == 0:
-        inside_hum = "Erro"
-        inside_temp = "Erro"
-    
-
-    update_values(inside_temp, inside_hum, 0, 0, 0)
+    update_values(inside_temp, inside_hum, accel_values, gyro_values, mag_values)
     
     root.after(1000, update) 
+
 
 def setup():
+    
+    mpu = MPU9250()
     root.after(1000, update) 
     root.mainloop()
-    #mpu.init_sensor()
 
 def terminal_mode():
 
     inside_temp, inside_hum = get_dht22()
-    #accel_values, gyro_values, mag_values = mpu.get_all_sensor_data()
-
+  
     print("Temperatura:" + str(inside_temp))
     print("Humidade:" + str(inside_hum))
     sleep(0.5)
@@ -40,18 +42,12 @@ def terminal_mode():
 
 
 if __name__ == "__main__":
-    print(mode)
 
-    if mode == 0:
-        setup()
-        print("Programa Inicializado")
-        sleep(2)
-        print("Iniciando os Sensores...")
-        while True:
-            update()
-    else:
-        while True:
-            terminal_mode()
-
+    setup()
+    print("Programa Inicializado")
+    sleep(2)
+    print("Iniciando os Sensores...")
+    while True:
+        update()
 
 

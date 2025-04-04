@@ -13,18 +13,10 @@ def get_dht22():
     except RuntimeError as error:
         print("Sensor NÃO Encontrado")
         time.sleep(0.2)
-        return 0.0, 0.0
+        return None, None
 
     except Exception as error:
         sensor.exit()
-        return 0.0, 0.0
-        
-    time.sleep(0.5)
+        return None, None
 
-while True:
-    time.sleep(0.5)
-    inside_temp, inside_hum = get_dht22()
-    #accel_values, gyro_values, mag_values = mpu.get_all_sensor_data()
 
-    print("Temperatura:" + str(inside_temp))
-    print("Humidade:" + str(inside_hum))
