@@ -1,16 +1,9 @@
 import json
 from Sensores.DHT22 import get_dht22
-from Interface import update_values, root
-from Sensores.mpu9250 import MPU9250
+#from Sensores.mpu9250 import MPU9250
 from time import sleep
 import os
 import serial
-
-# Provisorio
-
-ser = serial.Serial('/dev/serial0', 9600)
-
-
 
 
 def verify_value(val):
@@ -37,23 +30,18 @@ def convert_data_to_json():
 
 def send_data(json_data):
     
-    ser.write((json_data + '\n').encode()) 
     #print(f"Sending data: {json_data}")
+    pass
 
 
 def update():
     inside_temp, inside_hum = verify_value(get_dht22())
     accel_values, gyro_values, mag_values = verify_value(0)  # mpu.get_all_sensor_data()
-    
-    update_values(inside_temp, inside_hum, accel_values, gyro_values, mag_values)
-    
-    root.after(1000, update) 
 
 
 def setup():
-    mpu = MPU9250()
-    root.after(1000, update) 
-    root.mainloop()
+    #mpu = MPU9250()
+    pass
 
 
 if __name__ == "__main__":
