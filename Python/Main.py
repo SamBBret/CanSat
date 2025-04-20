@@ -30,7 +30,7 @@ def convert_data_to_json():
 
 def send_data(json_data):
     
-    #print(f"Sending data: {json_data}")
+    print(f"Sending data: {json_data}")
     pass
 
 
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     print("Iniciando os Sensores...")
 
     while True:
+
         json_data = convert_data_to_json()
         send_data(json_data)
-        
-        sleep(2)
+        sleep(1)
