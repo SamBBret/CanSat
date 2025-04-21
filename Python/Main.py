@@ -17,7 +17,7 @@ def setup():
 def update(wait_time):
     
     inside_temp, inside_hum = verify_value(get_dht22())
-    accel_values, gyro_values, mag_values = verify_value(0)  # mpu.get_all_sensor_data()
+    accel_values, gyro_values, mag_values = (0,0,0)  # mpu.get_all_sensor_data()
     pi_temp = popen("vcgencmd measure_temp").read().split('=')[1].split("'")[0]
     lat, lon, alt = get_gps_data()
 
