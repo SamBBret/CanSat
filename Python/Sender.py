@@ -4,7 +4,7 @@ import json
 def verify_value(val):
     return val if val is not None else "N/A"
 
-def convert_data_to_json(inside_temp, inside_hum, accel_values, gyro_values, mag_values, pi_temp, lat, lon, alt):
+def convert_data_to_json(inside_temp, inside_hum, accel_values, gyro_values, mag_values, pi_temp, lat, lon, alt, pressure, temp_bmp, alt_bmp):
    
     sensor_data = {
         "temperature": inside_temp,
@@ -15,7 +15,10 @@ def convert_data_to_json(inside_temp, inside_hum, accel_values, gyro_values, mag
         "pi_temp" :  pi_temp,
         "latitude" : lat,
         "longitude" : lon,
-        "altitude" : alt
+        "altitude" : alt,
+        "pressure" : pressure,
+        "temp_bmp" : temp_bmp, 
+        "alt_bmp" : alt_bmp
     }
     
     sensor_data_json = json.dumps(sensor_data)
