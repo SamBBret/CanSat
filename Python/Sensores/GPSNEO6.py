@@ -1,8 +1,13 @@
 import serial
 import pynmea2
 
+import serial
+import pynmea2
+
 def get_gps_data(port="/dev/ttyAMA0", baudrate=9600, timeout=0.5):
     ser = serial.Serial(port, baudrate=baudrate, timeout=timeout)
+    
+    lat, lon, alt = None, None, None  # Inicializando as vari�veis antes do loop
     
     while True:
         newdata = ser.readline().decode("utf-8", errors="ignore")
@@ -19,10 +24,12 @@ def get_gps_data(port="/dev/ttyAMA0", baudrate=9600, timeout=0.5):
             try:
                 msg = pynmea2.parse(newdata)
                 alt = msg.altitude
-                # Assim que temos latitude, longitude e altitude, retornamos os valores
-                return lat, lon, alt
+                # Verifica se lat, lon e alt est�o dispon�veis antes de retornar
+                if lat is not None and lon is not None and alt is not None:
+                    return lat, lon, alt
             except pynmea2.ParseError:
                 continue
+
 
 
 def send_command_to_gps(port="/dev/ttyAMA0", baudrate=9600, command=None):
