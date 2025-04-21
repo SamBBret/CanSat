@@ -14,7 +14,7 @@ def convert_data_to_json():
    
     inside_temp, inside_hum = get_dht22()
     accel_values, gyro_values, mag_values = (0, 0, 0)
-    pi_temp = os.popen("vcgencmd measure_temp").read()
+    pi_temp = os.popen("vcgencmd measure_temp").read().split('=')[1].split("'")[0]
 
 
     sensor_data = {
