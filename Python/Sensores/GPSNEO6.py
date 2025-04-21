@@ -24,7 +24,6 @@ def get_gps_data(port="/dev/ttyAMA0", baudrate=9600, timeout=0.5):
             try:
                 msg = pynmea2.parse(newdata)
                 alt = msg.altitude
-                # Verifica se lat, lon e alt est�o dispon�veis antes de retornar
                 if lat is not None and lon is not None and alt is not None:
                     return lat, lon, alt
             except pynmea2.ParseError:
