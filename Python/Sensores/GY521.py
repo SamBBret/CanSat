@@ -1,7 +1,8 @@
 import smbus
-from time import sleep
+from time import sleep, time
+import statistics
 
-# MPU6050 Registers and their Address
+# MPU6050 Registers
 PWR_MGMT_1   = 0x6B
 SMPLRT_DIV   = 0x19
 CONFIG       = 0x1A
@@ -18,124 +19,178 @@ class MPU6050:
     def __init__(self, bus_num=1, device_address=0x68):
         self.bus = smbus.SMBus(bus_num)
         self.device_address = device_address
-        self.accel_scale = 16384.0  # for +/- 2g range
-        self.gyro_scale = 131.0     # for +/- 250 deg/sec range
+        self.accel_scale = 16384.0  # ±2g range
+        self.gyro_scale = 131.0     # ±250°/s range
+        
+        # Default calibration offsets (update with calibrate() method)
+        self.accel_offsets = {'x': 0, 'y': 0, 'z': 0}
+        self.gyro_offsets = {'x': 0, 'y': 0, 'z': 0}
+        
         self.MPU_Init()
+        self.last_update = time()
         
     def MPU_Init(self):
         """Initialize the MPU6050 sensor"""
-        # Write to sample rate register
+        # Wake up the device
+        self.bus.write_byte_data(self.device_address, PWR_MGMT_1, 0x00)
+        sleep(0.1)
+        # Configure sample rate (1kHz/(1+7) = 125Hz)
         self.bus.write_byte_data(self.device_address, SMPLRT_DIV, 7)
-        # Write to power management register
-        self.bus.write_byte_data(self.device_address, PWR_MGMT_1, 1)
-        # Write to Configuration register
-        self.bus.write_byte_data(self.device_address, CONFIG, 0)
-        # Write to Gyro configuration register
-        self.bus.write_byte_data(self.device_address, GYRO_CONFIG, 24)
-        # Write to interrupt enable register
+        # Disable DLPF (set bandwidth to 260Hz)
+        self.bus.write_byte_data(self.device_address, CONFIG, 0x00)
+        # Set gyro range to ±250°/s
+        self.bus.write_byte_data(self.device_address, GYRO_CONFIG, 0x00)
+        # Enable interrupts
         self.bus.write_byte_data(self.device_address, INT_ENABLE, 1)
+        sleep(0.1)
     
     def read_raw_data(self, addr):
-        """Read raw 16-bit value from the specified register"""
+        """Read raw 16-bit value from register"""
         high = self.bus.read_byte_data(self.device_address, addr)
         low = self.bus.read_byte_data(self.device_address, addr+1)
-        value = ((high << 8) | low)
-        if value > 32768:
-            value = value - 65536
-        return value
+        value = (high << 8) | low
+        return value - 65536 if value > 32768 else value
     
-    def get_sensor_data(self):
-        """Return all sensor data as a dictionary with calibrated values"""
-        # Read raw values
-        raw_acc_x = self.read_raw_data(ACCEL_XOUT_H)
-        raw_acc_y = self.read_raw_data(ACCEL_YOUT_H)
-        raw_acc_z = self.read_raw_data(ACCEL_ZOUT_H)
-        raw_gyro_x = self.read_raw_data(GYRO_XOUT_H)
-        raw_gyro_y = self.read_raw_data(GYRO_YOUT_H)
-        raw_gyro_z = self.read_raw_data(GYRO_ZOUT_H)
-        
-        # Convert to appropriate units
-        data = {
-            'accel': {
-                'x': raw_acc_x / self.accel_scale,
-                'y': raw_acc_y / self.accel_scale,
-                'z': raw_acc_z / self.accel_scale,
-                'units': 'g'
-            },
-            'gyro': {
-                'x': raw_gyro_x / self.gyro_scale,
-                'y': raw_gyro_y / self.gyro_scale,
-                'z': raw_gyro_z / self.gyro_scale,
-                'units': 'deg/s'
-            },
-            'raw': {
-                'accel': {'x': raw_acc_x, 'y': raw_acc_y, 'z': raw_acc_z},
-                'gyro': {'x': raw_gyro_x, 'y': raw_gyro_y, 'z': raw_gyro_z}
-            }
-        }
-        return data
-
-    def calibrate_sensor(self, samples=1000):
+    def calibrate(self, samples=500, threshold=50):
         """
-        Calibrate the sensor by calculating offsets.
-        Place the sensor on a flat, level surface during calibration.
-        Returns offsets that can be applied to future readings.
+        Auto-calibrate the sensor by collecting samples while stationary.
+        Returns True if calibration succeeded.
         """
-        print("Calibrating MPU6050... Keep sensor stationary on flat surface")
+        print(f"Calibrating MPU6050 with {samples} samples...")
         
-        # Variables to accumulate offsets
-        accel_x_offset = 0
-        accel_y_offset = 0
-        accel_z_offset = 0
-        gyro_x_offset = 0
-        gyro_y_offset = 0
-        gyro_z_offset = 0
+        accel_x = []
+        accel_y = []
+        accel_z = []
+        gyro_x = []
+        gyro_y = []
+        gyro_z = []
         
+        # Collect samples
         for _ in range(samples):
+            try:
+                # Read raw values
+                ax = self.read_raw_data(ACCEL_XOUT_H)
+                ay = self.read_raw_data(ACCEL_YOUT_H)
+                az = self.read_raw_data(ACCEL_ZOUT_H)
+                gx = self.read_raw_data(GYRO_XOUT_H)
+                gy = self.read_raw_data(GYRO_YOUT_H)
+                gz = self.read_raw_data(GYRO_ZOUT_H)
+                
+                accel_x.append(ax)
+                accel_y.append(ay)
+                accel_z.append(az)
+                gyro_x.append(gx)
+                gyro_y.append(gy)
+                gyro_z.append(gz)
+                
+                sleep(0.005)
+            except Exception as e:
+                print(f"Read error during calibration: {e}")
+                return False
+        
+        # Calculate median values (more robust than mean)
+        try:
+            # Accelerometer offsets (Z should be ~1g)
+            self.accel_offsets['x'] = -statistics.median(accel_x)
+            self.accel_offsets['y'] = -statistics.median(accel_y)
+            self.accel_offsets['z'] = -(statistics.median(accel_z) - self.accel_scale)
+            
+            # Gyroscope offsets (should be zero)
+            self.gyro_offsets['x'] = -statistics.median(gyro_x)
+            self.gyro_offsets['y'] = -statistics.median(gyro_y)
+            self.gyro_offsets['z'] = -statistics.median(gyro_z)
+            
+            # Verify calibration quality
+            gyro_stdev = max(statistics.stdev(gyro_x), 
+                           statistics.stdev(gyro_y),
+                           statistics.stdev(gyro_z))
+            
+            if gyro_stdev > threshold:
+                print(f"Warning: High gyro noise (stdev={gyro_stdev}).")
+                return False
+                
+            print("Calibration successful!")
+            print(f"Accel Offsets: {self.accel_offsets}")
+            print(f"Gyro Offsets: {self.gyro_offsets}")
+            return True
+            
+        except Exception as e:
+            print(f"Calibration failed: {e}")
+            return False
+    
+    def get_sensor_data(self, apply_calibration=True):
+        """
+        Return calibrated sensor data with timestamps.
+        Units: accel in g, gyro in °/s
+        """
+        try:
             # Read raw values
-            accel_x = self.read_raw_data(ACCEL_XOUT_H)
-            accel_y = self.read_raw_data(ACCEL_YOUT_H)
-            accel_z = self.read_raw_data(ACCEL_ZOUT_H)
-            gyro_x = self.read_raw_data(GYRO_XOUT_H)
-            gyro_y = self.read_raw_data(GYRO_YOUT_H)
-            gyro_z = self.read_raw_data(GYRO_ZOUT_H)
+            raw_acc_x = self.read_raw_data(ACCEL_XOUT_H)
+            raw_acc_y = self.read_raw_data(ACCEL_YOUT_H)
+            raw_acc_z = self.read_raw_data(ACCEL_ZOUT_H)
+            raw_gyro_x = self.read_raw_data(GYRO_XOUT_H)
+            raw_gyro_y = self.read_raw_data(GYRO_YOUT_H)
+            raw_gyro_z = self.read_raw_data(GYRO_ZOUT_H)
             
-            # Accumulate offsets
-            accel_x_offset += accel_x
-            accel_y_offset += accel_y
-            accel_z_offset += (accel_z - self.accel_scale)  # Expecting 1g in z-axis
-            gyro_x_offset += gyro_x
-            gyro_y_offset += gyro_y
-            gyro_z_offset += gyro_z
+            # Apply calibration if enabled
+            if apply_calibration:
+                raw_acc_x += self.accel_offsets['x']
+                raw_acc_y += self.accel_offsets['y']
+                raw_acc_z += self.accel_offsets['z']
+                raw_gyro_x += self.gyro_offsets['x']
+                raw_gyro_y += self.gyro_offsets['y']
+                raw_gyro_z += self.gyro_offsets['z']
             
-            sleep(0.001)
-        
-        # Calculate average offsets
-        offsets = {
-            'accel': {
-                'x': accel_x_offset / samples,
-                'y': accel_y_offset / samples,
-                'z': accel_z_offset / samples
-            },
-            'gyro': {
-                'x': gyro_x_offset / samples,
-                'y': gyro_y_offset / samples,
-                'z': gyro_z_offset / samples
+            # Calculate time delta since last reading
+            now = time()
+            dt = now - self.last_update
+            self.last_update = now
+            
+            return {
+                'timestamp': now,
+                'dt': dt,
+                'accel': {
+                    'x': raw_acc_x / self.accel_scale,
+                    'y': raw_acc_y / self.accel_scale,
+                    'z': raw_acc_z / self.accel_scale,
+                    'units': 'g'
+                },
+                'gyro': {
+                    'x': raw_gyro_x / self.gyro_scale,
+                    'y': raw_gyro_y / self.gyro_scale,
+                    'z': raw_gyro_z / self.gyro_scale,
+                    'units': 'deg/s'
+                },
+                'raw': {
+                    'accel': {'x': raw_acc_x, 'y': raw_acc_y, 'z': raw_acc_z},
+                    'gyro': {'x': raw_gyro_x, 'y': raw_gyro_y, 'z': raw_gyro_z}
+                }
             }
-        }
-        
-        print("Calibration complete. Offsets:", offsets)
-        return offsets
+            
+        except Exception as e:
+            print(f"Error reading sensor: {e}")
+            return None
 
-# Example usage:
+# Example usage
 if __name__ == "__main__":
     mpu = MPU6050()
     
-    # Calibrate the sensor (recommended on first use)
-    # offsets = mpu.calibrate_sensor()
-    # You would typically store these offsets and apply them to future readings
+    # Perform calibration (place sensor flat during this)
+    if mpu.calibrate():
+        print("Calibration successful!")
+    else:
+        print("Calibration failed, using default offsets")
     
-    # Get sensor data
-    data = mpu.get_sensor_data()
-    print("Acceleration (g):", data['accel'])
-    print("Rotation (deg/s):", data['gyro'])
+    # Read data loop
+    try:
+        while True:
+            data = mpu.get_sensor_data()
+            if data:
+                print("\nAccel (g): X={:.3f}, Y={:.3f}, Z={:.3f}".format(
+                    data['accel']['x'], data['accel']['y'], data['accel']['z']))
+                print("Gyro (°/s): X={:.3f}, Y={:.3f}, Z={:.3f}".format(
+                    data['gyro']['x'], data['gyro']['y'], data['gyro']['z']))
+            sleep(0.1)
+            
+    except KeyboardInterrupt:
+        print("\nExiting...")
