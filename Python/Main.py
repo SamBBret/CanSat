@@ -1,6 +1,6 @@
 from Sensores.DHT22 import DHT22Sensor 
 from Sensores.GY521 import MPU6050
-from Sensores.GPSNEO6 import get_gps_data, send_command_to_gps
+from Sensores.GPSNEO6 import GPS
 from Sensores.BMP280 import BMP280Sensor
 from time import sleep
 from Sender import send_data, convert_data_to_json, verify_value
@@ -11,6 +11,7 @@ wait_time = 1
 mpu = None
 dht = None
 bmp = None
+gps = None
 
 # Verifica se os dados recebidos dos sensores são validos, caso nao o sejam avisa e retorna como None
 def safe_read(sensor, method_name):
@@ -26,7 +27,7 @@ def safe_read(sensor, method_name):
 
 # Serve para iniciar todos os sensores, basicamente todo o codigo que deve rodar antes da atualização dos dados começar
 def setup():
-    global mpu, dht, bmp
+    global mpu, dht, bmp, gps
 
     bmp = BMP280Sensor()
     if bmp.failed:
@@ -47,7 +48,8 @@ def setup():
         print(f"[ERRO] Falha ao inicializar DHT22: {e}")
 
     try:
-        send_command_to_gps()
+        gps = GPS
+        gps.send_command()
         print("Comando de setup do GPS enviado.")
     except Exception as e:
         print(f"[ERRO] Falha ao configurar GPS: {e}")
@@ -60,7 +62,7 @@ def update(wait_time):
     accel_values = safe_read(mpu, "get_accel") or (None, None, None) # Aceleração
     gyro_values = safe_read(mpu, "get_gyro") or (None, None, None) # Rotação
     pi_temp = popen("vcgencmd measure_temp").read().split('=')[1].split("'")[0] # Temperatura do Raspberry PI5
-    lat, lon, alt = get_gps_data() # Coordenadas do GPS e altitude
+    lat, lon, alt = safe_read(gps, "get_gyro") or (None, None, None) # Coordenadas do GPS e altitude
     temp_bmp, pressure, alt_bmp = safe_read(bmp, "read") or (None, None, None) # Temperatura, pressão atmosferica e altitude
 
     json_data = convert_data_to_json(  # Recebe os dados e organiza-os em uma string JSON
