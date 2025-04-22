@@ -171,6 +171,24 @@ class MPU6050:
             print(f"Error reading sensor: {e}")
             return None
 
+    def get_gyro_data():
+
+        mpu_data = mpu.get_sensor_data()
+                    
+        accel = {
+                    'x': round(mpu_data['accel']['x'], 3),
+                    'y': round(mpu_data['accel']['y'], 3),
+                    'z': round(mpu_data['accel']['z'], 3)
+                }
+                
+        gyro = {
+                    'x': round(mpu_data['gyro']['x'], 3),
+                    'y': round(mpu_data['gyro']['y'], 3),
+                    'z': round(mpu_data['gyro']['z'], 3)
+                }
+        
+        return accel, gyro
+
 # Example usage
 if __name__ == "__main__":
     mpu = MPU6050()

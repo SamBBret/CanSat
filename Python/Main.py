@@ -1,15 +1,19 @@
-from Sensores.DHT22 import get_dht22
+from Sensores.DHT22 import get_dht22, initialize_dht
 from Sensores.GPSNEO6 import get_gps_data, send_command_to_gps
-from Sensores.BMP280 import get_bmp280_values
+from Sensores.BMP280 import get_bmp280_values, bmp280_init
+from Sensores.GY521 import MPU6050
 from time import sleep, time
 from Sender import send_data, convert_data_to_json
 from os import popen
-from Sensores.GY521 import MPU6050
 
 wait_time = 1
 mpu = None
 
 def setup():
+    
+    bmp280_init()
+    initialize_dht()
+    
     global mpu
     
     print("Initializing MPU6050...")
@@ -23,6 +27,7 @@ def setup():
     send_command_to_gps()
     print("All sensors initialized")
 
+
 def update(wait_time):
     global mpu
     
@@ -32,19 +37,7 @@ def update(wait_time):
         pi_temp = popen("vcgencmd measure_temp").read().split('=')[1].split("'")[0]
         lat, lon, alt = get_gps_data()
         temp_bmp, pressure, alt_bmp = get_bmp280_values()
-        mpu_data = mpu.get_sensor_data()
-            
-        accel = {
-            'x': round(mpu_data['accel']['x'], 3),
-            'y': round(mpu_data['accel']['y'], 3),
-            'z': round(mpu_data['accel']['z'], 3)
-        }
-        
-        gyro = {
-            'x': round(mpu_data['gyro']['x'], 3),
-            'y': round(mpu_data['gyro']['y'], 3),
-            'z': round(mpu_data['gyro']['z'], 3)
-        }
+        accel, gyro = mpu.get_gyro_data()
         
         # Print the calibrated values for verification
         print("\n--- Calibrated IMU Values ---")
