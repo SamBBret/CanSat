@@ -62,14 +62,15 @@ def update(wait_time):
     accel_values = safe_read(mpu, "get_accel") or (None, None, None) # Aceleração
     gyro_values = safe_read(mpu, "get_gyro") or (None, None, None) # Rotação
     pi_temp = popen("vcgencmd measure_temp").read().split('=')[1].split("'")[0] # Temperatura do Raspberry PI5
-    lat, lon, alt = safe_read(gps, "get_gyro") or (None, None, None) # Coordenadas do GPS e altitude
+    lat, lon, alt = safe_read(gps, "read") or (None, None, None) # Coordenadas do GPS e altitude
     temp_bmp, pressure, alt_bmp = safe_read(bmp, "read") or (None, None, None) # Temperatura, pressão atmosferica e altitude
 
     json_data = convert_data_to_json(  # Recebe os dados e organiza-os em uma string JSON
         inside_temp, inside_hum,
         accel_values,
         gyro_values,
-        pi_temp, lat, lon, alt,
+        pi_temp, 
+        lat, lon, alt,
         pressure, temp_bmp, alt_bmp
     )
                         
