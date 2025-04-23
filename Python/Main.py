@@ -59,20 +59,22 @@ def setup():
 def update(wait_time):
     
     inside_temp, inside_hum = safe_read(dht, "read") or (None, None) # Temperaturas Interiores
-    accel_values = safe_read(mpu, "get_accel") or (None, None, None) # Aceleração
-    gyro_values = safe_read(mpu, "get_gyro") or (None, None, None) # Rotação
+    accel_x, accel_y, accel_z = safe_read(mpu, "get_accel") or (None, None, None) # Aceleração
+    gyro_x, gyro_y, gyro_z = safe_read(mpu, "get_gyro") or (None, None, None) # Rotação
     pi_temp = popen("vcgencmd measure_temp").read().split('=')[1].split("'")[0] # Temperatura do Raspberry PI5
     lat, lon, alt = safe_read(gps, "read") or (None, None, None) # Coordenadas do GPS e altitude
     temp_bmp, pressure, alt_bmp = safe_read(bmp, "read") or (None, None, None) # Temperatura, pressão atmosferica e altitude
 
+
     json_data = convert_data_to_json(  # Recebe os dados e organiza-os em uma string JSON
         inside_temp, inside_hum,
-        accel_values,
-        gyro_values,
+        accel_x, accel_y, accel_z,
+        gyro_x, gyro_y, gyro_z,
         pi_temp, 
         lat, lon, alt,
         pressure, temp_bmp, alt_bmp
     )
+
                         
     send_data(json_data) # Envia os dados
     sleep(wait_time) # Tempo de espera ate repetir novamente, pode ser definido ao chamar a função

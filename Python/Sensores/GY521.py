@@ -39,21 +39,21 @@ class MPU6050:
         acc_x = self.read_raw_data(self.ACCEL_XOUT_H)
         acc_y = self.read_raw_data(self.ACCEL_YOUT_H)
         acc_z = self.read_raw_data(self.ACCEL_ZOUT_H)
-        return {
-            'x': acc_x / 16384.0,
-            'y': acc_y / 16384.0,
-            'z': acc_z / 16384.0
-        }
+        return (
+            acc_x / 16384.0,
+            acc_y / 16384.0,
+            acc_z / 16384.0
+        )
 
     def get_gyro(self):
         gyro_x = self.read_raw_data(self.GYRO_XOUT_H)
         gyro_y = self.read_raw_data(self.GYRO_YOUT_H)
         gyro_z = self.read_raw_data(self.GYRO_ZOUT_H)
-        return {
-            'x': gyro_x / 131.0,
-            'y': gyro_y / 131.0,
-            'z': gyro_z / 131.0
-        }
+        return (
+            gyro_x / 131.0,
+            gyro_y / 131.0,
+            gyro_z / 131.0
+        )
 
 
 
