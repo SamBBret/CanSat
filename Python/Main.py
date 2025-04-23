@@ -48,7 +48,7 @@ def setup():
         print(f"[ERRO] Falha ao inicializar DHT22: {e}")
 
     try:
-        gps = GPS
+        gps = GPS()
         gps.send_command()
         print("Comando de setup do GPS enviado.")
     except Exception as e:
