@@ -2,21 +2,31 @@ import time
 import board
 import adafruit_dht
 
-sensor = adafruit_dht.DHT22(board.D4)
+class DHT22Sensor:
+    def __init__(self, pin=board.D4):
+        try:
+            self.sensor = adafruit_dht.DHT22(pin)
+            self.failed = False
+        except Exception as e:
+            print("[ERRO] Não foi possível inicializar o DHT22:", e)
+            self.sensor = None
+            self.failed = True
 
-def get_dht22():
+    def read(self):
+        if self.failed or self.sensor is None:
+            return None, None
+        try:
+            temperature = self.sensor.temperature
+            humidity = self.sensor.humidity
+            return temperature, humidity
+        except RuntimeError:
+            # Erros normais de leitura do DHT
+            return None, None
+        except Exception as e:
+            print("[ERRO CRÍTICO] Problema com o DHT22:", e)
+            self.failed = True
+            return None, None
 
-    try:
-        temperature_c = sensor.temperature
-        humidity = sensor.humidity            
-        return temperature_c, humidity
-    except RuntimeError as error:
-        #print("Sensor NÃO Encontrado")
-        time.sleep(0.2)
-        return None, None
-
-    except Exception as error:
-        sensor.exit()
-        return None, None
-
-
+    def close(self):
+        if self.sensor:
+            self.sensor.exit()
