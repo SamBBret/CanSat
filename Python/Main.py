@@ -13,6 +13,8 @@ dht = None
 bmp = None
 gps = None
 
+time = 0
+
 # Verifica se os dados recebidos dos sensores são validos, caso nao o sejam avisa e retorna como None
 def safe_read(sensor, method_name):
     try:
@@ -57,7 +59,9 @@ def setup():
 
 # Atualização dos dados e envio de mensagens
 def update(wait_time):
-    
+    global time
+
+    time += 1
     inside_temp, inside_hum = safe_read(dht, "read") or (None, None) # Temperaturas Interiores
     accel_x, accel_y, accel_z = safe_read(mpu, "get_accel") or (None, None, None) # Aceleração
     gyro_x, gyro_y, gyro_z = safe_read(mpu, "get_gyro") or (None, None, None) # Rotação
@@ -72,7 +76,7 @@ def update(wait_time):
         gyro_x, gyro_y, gyro_z,
         pi_temp, 
         lat, lon, alt,
-        pressure, temp_bmp, alt_bmp
+        pressure, temp_bmp, alt_bmp, time
     )
 
                         
