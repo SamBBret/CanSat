@@ -52,6 +52,8 @@ def setup():
     try:
         gps = GPS()
         gps.send_command()
+        gps.start_background_read()
+        print("GPS iniciado em background.")
         print("Comando de setup do GPS enviado.")
     except Exception as e:
         print(f"[ERRO] Falha ao configurar GPS: {e}")
@@ -66,7 +68,7 @@ def update(wait_time):
     accel_x, accel_y, accel_z = safe_read(mpu, "get_accel") or (None, None, None) # Aceleração
     gyro_x, gyro_y, gyro_z = safe_read(mpu, "get_gyro") or (None, None, None) # Rotação
     pi_temp = popen("vcgencmd measure_temp").read().split('=')[1].split("'")[0] # Temperatura do Raspberry PI5
-    lat, lon, alt = safe_read(gps, "read") or (None, None, None) # Coordenadas do GPS e altitude
+    lat, lon, alt = gps.lat, gps.lon, gps.alt # Coordenadas do GPS e altitude
     temp_bmp, pressure, alt_bmp = safe_read(bmp, "read") or (None, None, None) # Temperatura, pressão atmosferica e altitude
 
 

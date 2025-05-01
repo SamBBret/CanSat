@@ -1,5 +1,6 @@
 import serial
 import pynmea2
+import threading
 from typing import Tuple, Optional
 
 class GPS:
@@ -13,6 +14,21 @@ class GPS:
         self.alt = None
         self.last_valid_position = (None, None)
 
+    
+    def start_background_read(self):
+        thread = threading.Thread(target=self._background_loop, daemon=True)
+        thread.start()
+
+    def _background_loop(self):
+        while True:
+            lat, lon, alt = self.read()
+            if self.is_valid_coordinate(lat, lon):
+                self.lat, self.lon = lat, lon
+                self.last_valid_position = (lat, lon)
+            elif self.last_valid_position != (None, None):
+                self.lat, self.lon = self.last_valid_position
+            self.alt = alt
+
     def is_valid_coordinate(self, lat: float, lon: float) -> bool:
         return (
             lat is not None and lon is not None and
@@ -25,8 +41,7 @@ class GPS:
             # Temporários para nova leitura
             temp_lat, temp_lon, temp_alt = None, None, None
 
-            # Tenta ler até 100 linhas para encontrar dados úteis
-            for _ in range(100):
+            for _ in range(10):
                 try:
                     newdata = self.ser.readline().decode("utf-8", errors="ignore").strip()
                     if not newdata:
