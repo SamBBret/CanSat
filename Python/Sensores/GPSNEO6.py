@@ -11,16 +11,22 @@ class GPS:
         self.lat = None
         self.lon = None
         self.alt = None
-        self.last_valid_position = (None, None)  # Track last good coordinates
+        self.last_valid_position = (None, None)
 
     def is_valid_coordinate(self, lat: float, lon: float) -> bool:
-        return (lat is not None and lon is not None 
-                and abs(lat) > 0.001 and abs(lon) > 0.001
-                and -90 <= lat <= 90 and -180 <= lon <= 180)
+        return (
+            lat is not None and lon is not None and
+            abs(lat) > 0.001 and abs(lon) > 0.001 and
+            -90 <= lat <= 90 and -180 <= lon <= 180
+        )
 
     def read(self) -> Tuple[Optional[float], Optional[float], Optional[float]]:
         try:
-            while True:
+            # Temporários para nova leitura
+            temp_lat, temp_lon, temp_alt = None, None, None
+
+            # Tenta ler até 100 linhas para encontrar dados úteis
+            for _ in range(100):
                 try:
                     newdata = self.ser.readline().decode("utf-8", errors="ignore").strip()
                     if not newdata:
@@ -29,30 +35,34 @@ class GPS:
                     if newdata.startswith("$GPGLL"):
                         msg = pynmea2.parse(newdata)
                         if self.is_valid_coordinate(msg.latitude, msg.longitude):
-                            self.lat, self.lon = msg.latitude, msg.longitude
-                            self.last_valid_position = (self.lat, self.lon)
-                        else:
-                            print("Invalid GPS location (null island), using last known good position")
-                            self.lat, self.lon = self.last_valid_position
+                            temp_lat, temp_lon = msg.latitude, msg.longitude
+                            self.last_valid_position = (temp_lat, temp_lon)
 
                     elif newdata.startswith("$GPGGA"):
                         msg = pynmea2.parse(newdata)
-                        
-                        if msg.gps_qual > 0:  
-                            self.alt = msg.altitude
-                            
-                            if (self.lat is not None 
-                                and self.lon is not None 
-                                and self.is_valid_coordinate(self.lat, self.lon)):
-                                return self.lat, self.lon, self.alt
+                        if msg.gps_qual > 0:
+                            temp_alt = msg.altitude
 
-                except pynmea2.ParseError:
-                    continue
-                except UnicodeDecodeError:
+                except (pynmea2.ParseError, UnicodeDecodeError):
                     continue
                 except Exception as e:
                     print(f"[WARN] GPS parsing warning: {str(e)}")
                     continue
+
+                # Se tiver nova ou última posição válida + altitude, retorna
+                lat = temp_lat or self.last_valid_position[0]
+                lon = temp_lon or self.last_valid_position[1]
+
+                if self.is_valid_coordinate(lat, lon) and temp_alt is not None:
+                    self.lat, self.lon, self.alt = lat, lon, temp_alt
+                    return self.lat, self.lon, self.alt
+
+            # Se nada novo, tenta retornar última válida com antiga altitude
+            lat, lon = self.last_valid_position
+            if self.is_valid_coordinate(lat, lon):
+                return lat, lon, self.alt  # alt pode ser antiga ou None
+
+            return None, None, None  # Nada de útil encontrado
 
         except Exception as e:
             print(f"[ERROR] GPS read failure: {str(e)}")
@@ -67,7 +77,6 @@ class GPS:
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 0x00, 0x00, 0x00, 0x00, 0x53, 0x0A
             ])
-
         try:
             self.ser.write(command)
             print("UBX sent to GPS")
