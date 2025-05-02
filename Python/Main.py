@@ -51,7 +51,7 @@ def setup():
         print(f"[ERRO] Falha ao inicializar DHT22: {e}")
 
     try:
-        ds1 = DHT22Sensor()
+        ds1 = DS18B20Sensor()
         if ds1.failed:
             print("DS1 detectado, mas não responde.")
     except Exception as e:

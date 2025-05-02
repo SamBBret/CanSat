@@ -48,3 +48,4 @@ class DS18B20Sensor:
                 except ValueError:
                     return None, None
         return None, None
+
