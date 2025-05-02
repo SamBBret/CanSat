@@ -6,6 +6,7 @@ from time import sleep
 from Sender import send_data, convert_data_to_json, verify_value
 from os import popen
 
+#teste
 # Declaração de variaveis gerais
 wait_time = 1
 mpu = None
