@@ -3,7 +3,7 @@ import board
 import adafruit_dht
 
 class DHT22Sensor:
-    def __init__(self, pin=board.D17):
+    def __init__(self, pin=board.D4):
         try:
             self.sensor = adafruit_dht.DHT22(pin)
             self.failed = False
@@ -30,3 +30,4 @@ class DHT22Sensor:
     def close(self):
         if self.sensor:
             self.sensor.exit()
+

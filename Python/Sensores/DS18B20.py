@@ -1,20 +1,20 @@
-import time
 import glob
-import os
+import time
 
 class DS18B20Sensor:
-    def __init__(self):
+    def __init__(self, sensor_id=None):
         try:
-            os.system('modprobe w1-gpio')
-            os.system('modprobe w1-therm')
             base_dir = '/sys/bus/w1/devices/'
-            device_folders = glob.glob(base_dir + '28*')
-            if not device_folders:
-                raise FileNotFoundError("Sensor DS18B20 não encontrado.")
-            self.device_file = device_folders[0] + '/w1_slave'
+            if sensor_id:
+                self.device_file = f'{base_dir}{sensor_id}/w1_slave'
+            else:
+                device_folders = glob.glob(base_dir + '28*')
+                if not device_folders:
+                    raise FileNotFoundError("Sensor DS18B20 n�o encontrado.")
+                self.device_file = device_folders[0] + '/w1_slave'
             self.failed = False
         except Exception as e:
-            print("[ERRO] Não foi possível inicializar o DS18B20:", e)
+            print("[ERRO] N�o foi poss�vel inicializar o DS18B20:", e)
             self.device_file = None
             self.failed = True
 
@@ -48,4 +48,3 @@ class DS18B20Sensor:
                 except ValueError:
                     return None, None
         return None, None
-
