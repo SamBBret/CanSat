@@ -73,7 +73,11 @@ def update(wait_time):
     external_temp, external_hum = safe_read(ds1, "read") or (None, None) # Temperaturas Exteriores
     accel_x, accel_y, accel_z = safe_read(mpu, "get_accel") or (None, None, None) # Aceleração
     gyro_x, gyro_y, gyro_z = safe_read(mpu, "get_gyro") or (None, None, None) # Rotação
-    pi_temp = popen("vcgencmd measure_temp").read().split('=')[1].split("'")[0] # Temperatura do Raspberry PI5
+    try:
+        pi_temp = popen("vcgencmd measure_temp").read().split('=')[1].split("'")[0]
+    except:
+        pi_temp = "N/A"  # ou um valor simulado como "50.0"
+
     lat, lon, alt = gps.lat, gps.lon, gps.alt # Coordenadas do GPS e altitude
     temp_bmp, pressure, alt_bmp = safe_read(bmp, "read") or (None, None, None) # Temperatura, pressão atmosferica e altitude
 
