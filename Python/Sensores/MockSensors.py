@@ -69,3 +69,6 @@ class MockGPS:
 
     def start_background_read(self):
         pass
+
+git config --global --no-rebase
+

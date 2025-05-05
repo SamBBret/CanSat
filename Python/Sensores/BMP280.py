@@ -1,7 +1,7 @@
 import time
 #import board
 #import adafruit_bmp280
-from MockSensors import MockI2C, MockBMP280
+from Sensores.MockSensors import MockI2C, MockBMP280
 
 
 class BMP280Sensor:

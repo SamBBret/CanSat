@@ -1,7 +1,7 @@
 #import glob
 import time
 
-from MockSensors import MockDS18B20Sensor as DS18B20Sensor
+from Sensores.MockSensors import MockDS18B20Sensor as DS18B20Sensor
 
 class DS18B20Sensor:
     def __init__(self, sensor_id=None):
