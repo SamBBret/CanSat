@@ -1,5 +1,8 @@
-import smbus
+#import smbus
 from time import sleep
+
+from MockSensors import MockMPU6050 as MPU6050
+
 
 class MPU6050:
 

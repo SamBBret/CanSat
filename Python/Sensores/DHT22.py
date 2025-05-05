@@ -1,6 +1,7 @@
 import time
-import board
-import adafruit_dht
+#import board
+#import adafruit_dht
+from MockSensors import MockI2C, MockDHT22
 
 class DHT22Sensor:
     def __init__(self, pin=board.D4):

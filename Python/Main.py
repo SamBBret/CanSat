@@ -1,4 +1,8 @@
-from Sensores.MockSensors import DHT22Sensor, MPU6050, GPS, BMP280Sensor, DS18B20Sensor
+from Sensores.DHT22 import DHT22Sensor 
+from Sensores.GY521 import MPU6050
+from Sensores.MockGPSNEO6 import MockGPS
+from Sensores.BMP280 import BMP280Sensor
+from Sensores.DS18B20 import DS18B20Sensor
 from time import sleep
 from Sender import send_data, convert_data_to_json, verify_value
 from os import popen
