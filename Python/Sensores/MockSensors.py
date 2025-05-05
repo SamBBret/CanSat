@@ -1,6 +1,8 @@
 
 # MockSensors.py
 import random
+import threading
+import time
 
 
 class MockI2C:
@@ -70,5 +72,37 @@ class MockGPS:
     def start_background_read(self):
         pass
 
-git config --global --no-rebase
+    class MockGPSNEO6:
+        def __init__(self):
+            self.lat = None
+            self.lon = None
+            self.alt = None
+            self.last_valid_position = (None, None)
+
+        def start_background_read(self):
+            thread = threading.Thread(target=self._background_loop, daemon=True)
+            thread.start()
+
+        def _background_loop(self):
+            while True:
+                self.lat, self.lon, self.alt = self.read()
+                self.last_valid_position = (self.lat, self.lon)
+                time.sleep(1)
+
+        def is_valid_coordinate(self, lat, lon):
+            return (
+                lat is not None and lon is not None and
+                -90 <= lat <= 90 and -180 <= lon <= 180
+            )
+
+        def read(self):
+            self.lat = round(38.7169 + random.uniform(-0.001, 0.001), 6)
+            self.lon = round(-9.1399 + random.uniform(-0.001, 0.001), 6)
+            self.alt = round(50 + random.uniform(-2, 2), 2)
+            return self.lat, self.lon, self.alt
+
+        def send_command(self, command=None):
+            print("Comando simulado enviado ao GPS")
+
+
 
