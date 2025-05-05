@@ -1,6 +1,6 @@
 from Sensores.DHT22 import DHT22Sensor 
 from Sensores.GY521 import MPU6050
-from Sensores.MockGPSNEO6 import MockGPS
+from Sensores.MockGPSNEO6 import GPS
 from Sensores.BMP280 import BMP280Sensor
 from Sensores.DS18B20 import DS18B20Sensor
 from time import sleep
