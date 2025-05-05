@@ -30,7 +30,7 @@ def safe_read(sensor, method_name):
 
 # Serve para iniciar todos os sensores, basicamente todo o codigo que deve rodar antes da atualização dos dados começar
 def setup():
-    global mpu, dht, bmp, gps
+    global mpu, dht, bmp, gps, ds1
 
     bmp = BMP280Sensor()
     if bmp.failed:
@@ -51,11 +51,11 @@ def setup():
         print(f"[ERRO] Falha ao inicializar DHT22: {e}")
 
     try:
-        ds1 = DHT22Sensor()
+        ds1 = DS18B20Sensor(sensor_id='28-00000ff8c22d')
         if ds1.failed:
             print("DS1 detectado, mas não responde.")
     except Exception as e:
-        dht = None
+        ds1 = None
         print(f"[ERRO] Falha ao inicializar DS1: {e}")
 
 
@@ -106,6 +106,7 @@ if __name__ == "__main__":
 
     while True:
         update(wait_time)
+        
 
 
 
