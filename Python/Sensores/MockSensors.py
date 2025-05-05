@@ -1,26 +1,50 @@
 
+# MockSensors.py
 import random
 
-class DHT22Sensor:
-    def __init__(self): self.failed = False
-    def read(self): return round(25 + random.uniform(-2, 2), 2), round(60 + random.uniform(-5, 5), 2)
-
-class MPU6050:
-    def get_accel(self): return random.uniform(-1, 1), random.uniform(-1, 1), random.uniform(-1, 1)
-    def get_gyro(self): return random.uniform(-90, 90), random.uniform(-90, 90), random.uniform(-90, 90)
-
-class GPS:
+class MockI2C:
     def __init__(self):
-        self.lat = 38.7169 + random.uniform(-0.001, 0.001)
-        self.lon = -9.1399 + random.uniform(-0.001, 0.001)
-        self.alt = 100 + random.uniform(-10, 10)
-    def send_command(self): pass
-    def start_background_read(self): pass
+        pass
 
-class BMP280Sensor:
-    def __init__(self): self.failed = False
-    def read(self): return 24.3, 1013.25, 120
+class MockBMP280:
+    def __init__(self, i2c):
+        self.sea_level_pressure = 1013.25
 
-class DS18B20Sensor:
-    def __init__(self, sensor_id=''): self.failed = False
-    def read(self): return 22.5, None
+    @property
+    def temperature(self):
+        return round(random.uniform(20.0, 30.0), 2)
+
+    @property
+    def pressure(self):
+        return round(random.uniform(1000.0, 1020.0), 2)
+
+    @property
+    def altitude(self):
+        return round(random.uniform(150.0, 170.0), 2)
+
+class MockDHT22:
+    def read(self):
+        return round(random.uniform(22.0, 28.0), 2), round(random.uniform(40.0, 60.0), 2)
+
+class MockDS18B20:
+    def read(self):
+        return round(random.uniform(18.0, 25.0), 2), None
+
+class MockMPU6050:
+    def get_accel(self):
+        return random.uniform(-1, 1), random.uniform(-1, 1), random.uniform(-1, 1)
+
+    def get_gyro(self):
+        return random.uniform(-90, 90), random.uniform(-90, 90), random.uniform(-90, 90)
+
+class MockGPS:
+    def __init__(self):
+        self.lat = 38.736946
+        self.lon = -9.142685
+        self.alt = 120.5
+
+    def send_command(self):
+        pass
+
+    def start_background_read(self):
+        pass
