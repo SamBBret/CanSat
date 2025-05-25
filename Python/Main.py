@@ -8,12 +8,12 @@ from Sensores.Geiger import GeigerCounter
 from Sensores.BMP388 import BMP388Sensor
 from datetime import datetime
 from time import sleep
-from Sender import send_data, convert_data_to_json, verify_value
+from Sender import send_data, convert_data_to_csv, verify_value
 from LogData import log_data_to_file, set_file, PATH
 from Cam import CAMERA
 from os import popen
 
-wait_time = 1
+wait_time = 15
 mpu = None
 dht = None
 bmp = None
@@ -114,7 +114,7 @@ def update(wait_time):
 
     cpl = safe_read(geiger, "read") or None 
     
-    json_data = convert_data_to_json(
+    csv_data = convert_data_to_csv(
         inside_temp, inside_hum,
         external_temp, external_hum,
         accel_x, accel_y, accel_z,
@@ -127,8 +127,8 @@ def update(wait_time):
         cpl
     )
 
-    log_data_to_file(json_data)
-    send_data(json_data)
+    log_data_to_file(csv_data)
+    send_data(csv_data)
     sleep(wait_time)
 
 if __name__ == "__main__":
