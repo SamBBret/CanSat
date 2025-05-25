@@ -36,13 +36,12 @@ def safe_read(sensor, method_name):
 def setup():
 
     timestamp = datetime.utcnow().isoformat()
-    set_file(timestamp)
+    set_file()
 
     global mpu, dht, bmp, gps, ds1, ltr390, geiger, cam
-
-    cam = CAMERA()
-    cam.start_taking_photos_periodically(15)  # 15 segundos entre fotos!!
-    cam.start_video_recording(duration_seconds=120)
+    from LogData import PATH
+    cam = CAMERA(PATH)
+    cam.start_taking_photos_periodically(5)  # 15 segundos entre fotos!!
 
     try:
         bmp = BMP388Sensor(address=0x76) 
@@ -134,7 +133,7 @@ def update(wait_time):
 if __name__ == "__main__":
     setup()
     print("Programa Inicializado")
-    sleep(2)
+    sleep(5)
     print("Iniciando os Sensores...")
 
     try:
@@ -142,5 +141,5 @@ if __name__ == "__main__":
             update(wait_time)
     except KeyboardInterrupt:
         print("Programa terminado pelo utilizador.")
-        if cam:
+        if cam:                              
             cam.stop_taking_photos()
