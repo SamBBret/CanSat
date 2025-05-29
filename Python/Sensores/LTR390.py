@@ -29,3 +29,15 @@ class LTR390Sensor:
             self.failed = True
             return None, None, None, None
 
+import time
+if __name__ == "__main__":
+
+    ltr = LTR390Sensor()
+    while True:
+        uv, amb, uvi, lux = ltr.read()
+        print("UV: " + str(uv))
+        print("Ambiente: " + str(amb))
+        print("Uvi: " + str(uvi))
+        print("Lux: " + str(lux))
+
+        time.sleep(2)

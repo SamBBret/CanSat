@@ -12,16 +12,19 @@ from Sender import send_data, convert_data_to_csv, verify_value
 from LogData import log_data_to_file, set_file, PATH
 from Cam import CAMERA
 from os import popen
+import serial
+import subprocess
 
-wait_time = 15
+wait_time = 5
 mpu = None
 dht = None
 bmp = None
 gps = None
 ds1 = None
 geiger = None
-
 cam = None
+
+ser = None
 
 def safe_read(sensor, method_name):
     try:
@@ -38,10 +41,15 @@ def setup():
     timestamp = datetime.utcnow().isoformat()
     set_file()
 
-    global mpu, dht, bmp, gps, ds1, ltr390, geiger, cam
+    global mpu, dht, bmp, gps, ds1, ltr390, geiger, cam, ser
     from LogData import PATH
     cam = CAMERA(PATH)
     cam.start_taking_photos_periodically(5)  # 15 segundos entre fotos!!
+    try:
+        ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+    except Exception as e:
+        ser = None
+        print("Serial nâo encontrado")
 
     try:
         bmp = BMP388Sensor(address=0x76) 
@@ -92,13 +100,23 @@ def setup():
         print(f"[ERRO] Falha ao configurar GPS: {e}")
     
     try:
-        geiger = GeigerCounter(pin=22)
-        print("Geiger Counter iniciado no GPIO 22.")
+        pin = 27
+        geiger = GeigerCounter(pin)
+        print(f"Geiger Counter iniciado no GPIO {pin}.")
     except Exception as e:
         geiger = None
         print(f"[ERRO] Falha ao inicializar Geiger: {e}")
 
-
+def safe(val, factor=1, default=0):
+    try:
+        return int(float(val) * factor)
+    except (TypeError, ValueError):
+        return default
+    
+def get_scaled_cpu_temp() -> int:
+    output = subprocess.check_output(["vcgencmd", "measure_temp"]).decode()
+    temp = float(output.split('=')[1].split("'")[0])
+    return int(temp * 10)
 
 def update(wait_time):
     
@@ -106,28 +124,47 @@ def update(wait_time):
     external_temp, external_hum = safe_read(ds1, "read") or (None, None)
     gyro_x, gyro_y, gyro_z, accel_x, accel_y, accel_z, mag_x, mag_y, mag_z = safe_read(mpu, "read") or (None,) * 9
 
-    pi_temp = popen("vcgencmd measure_temp").read().split('=')[1].split("'")[0] 
-    lat, lon, alt = gps.lat, gps.lon, gps.alt 
+    pi_temp = get_scaled_cpu_temp()
+
+    lat = gps.lat if gps.lat is not None else 0.0
+    lon = gps.lon if gps.lon is not None else 0.0
+    alt = gps.alt if gps.alt is not None else 0.0
+
     temp_bmp, pressure, alt_bmp = safe_read(bmp, "read") or (None, None, None)
     uv, ambient_light, uvi, lux = safe_read(ltr390, "read") or (None,) * 4
-
     cpl = safe_read(geiger, "read") or None 
     
+    gps_sum = (lat * 1_000_000) + (lon * 1_000_000) + (alt * 100)
+    data_sum = (
+        safe(inside_hum, 100) + safe(inside_temp, 100) +
+        safe(external_hum, 100) + safe(external_temp, 100) +
+        safe(gyro_x, 1000000) + safe(gyro_y,  1000000) + safe(gyro_z, 1000000) +
+        safe(accel_x,1000000) + safe(accel_y,1000000) + safe(accel_z,1000000) +
+        safe(pi_temp) +
+        safe(temp_bmp, 100) + safe(pressure, 100) +
+        safe(uv, 100) + safe(ambient_light, 100) +
+        safe(uvi, 100) + safe(lux, 100) + safe(cpl,1)
+    )
+    # Nao estamos a mandar alt bmp - desnecessarui atualmente
+    
     csv_data = convert_data_to_csv(
-        inside_temp, inside_hum,
-        external_temp, external_hum,
-        accel_x, accel_y, accel_z,
-        gyro_x, gyro_y, gyro_z,
-        mag_x, mag_y, mag_z,
-        pi_temp, 
-        lat, lon, alt,
-        pressure, temp_bmp, alt_bmp,
-        uv, ambient_light, uvi, lux,
-        cpl
+        gps_sum, data_sum,
+        safe(inside_temp, 100), safe(inside_hum, 100),
+        safe(external_temp, 100), safe(external_hum, 100),
+        safe(accel_x,1000000), safe(accel_y,1000000), safe(accel_z,1000000),
+        safe(gyro_x,1000000), safe(gyro_y,1000000), safe(gyro_z,1000000),
+        pi_temp,
+        lat * 1_000_000, lon * 1_000_000, alt * 100,
+        safe(pressure, 100), safe(temp_bmp, 100),
+        safe(uv, 100), safe(ambient_light, 100),
+        safe(uvi, 100), safe(lux, 100),
+        safe(cpl,1)
     )
 
     log_data_to_file(csv_data)
-    send_data(csv_data)
+    if ser != None:
+        send_data(ser, csv_data)
+    print(csv_data)
     sleep(wait_time)
 
 if __name__ == "__main__":

@@ -116,6 +116,6 @@ if __name__ == "__main__":
             values = mpu.read()
             print(f"Giroscópio: {values[:3]}")
             print(f"Acelerômetro: {values[3:6]}")
-            print(f"Magnetômetro: {values[6:]}")
+            
             print("---")
             time.sleep(1)

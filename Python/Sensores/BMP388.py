@@ -43,7 +43,7 @@ class BMP388Sensor:
         
         try:
             data = self.bus.read_i2c_block_data(self.address, BMP388_REG_DATA, 6)
-
+            
           
             pressure_raw = struct.unpack('>I', bytes([0] + data[0:3]))[0] 
             temp_raw = struct.unpack('>I', bytes([0] + data[3:6]))[0]  

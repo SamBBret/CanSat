@@ -14,14 +14,12 @@ class DHT22Sensor:
 
     def read(self):
         if self.failed or self.sensor is None:
+            print("DHT22 nâo encontrado")
             return None, None
         try:
             temperature = self.sensor.temperature
             humidity = self.sensor.humidity
             return temperature, humidity
-        except RuntimeError:
-            # Erros normais de leitura do DHT
-            return None, None
         except Exception as e:
             print("[ERRO CRÍTICO] Problema com o DHT22:", e)
             self.failed = True
@@ -31,3 +29,12 @@ class DHT22Sensor:
         if self.sensor:
             self.sensor.exit()
 
+if __name__ == "__main__":
+    import time
+    dht = DHT22Sensor()
+    while True:
+        temp, hum = dht.read()
+        print("Temperatura: " + str(temp))
+        print("Humidade: " + str(hum))
+        time.sleep(2)
+        
