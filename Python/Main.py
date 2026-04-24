@@ -1,7 +1,5 @@
 from datetime import datetime
 from time import sleep
-from Sender import send_data, convert_data_to_csv, verify_value
-from LogData import log_data_to_file, set_file, PATH
 from Cam import CAMERA
 from os import popen
 import serial
