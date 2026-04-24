@@ -5,6 +5,7 @@ from os import popen
 from LogData import log_data_to_file, set_file, PATH
 import serial
 import subprocess
+import time
 
 wait_time = 5
 cam = None
