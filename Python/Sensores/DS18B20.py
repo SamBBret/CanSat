@@ -1,9 +1,13 @@
 import glob
+import os
 import time
 
 class DS18B20Sensor:
     def __init__(self, sensor_id=None):
         try:
+            os.system( 'modprobe w1-gpio')
+            os.system( 'modprobe w1-therm')
+
             base_dir = '/sys/bus/w1/devices/'
             if sensor_id:
                 self.device_file = f'{base_dir}{sensor_id}/w1_slave'
@@ -48,3 +52,14 @@ class DS18B20Sensor:
                 except ValueError:
                     return None, None
         return None, None
+
+
+if __name__ == "__main__":
+    import time
+    ds1 = DS18B20Sensor()
+    while True:
+        temp, hum = ds1.read()
+        print("Temperatura: " + str(temp))
+        print("Humidade: " + str(hum))
+        time.sleep(2)
+        
