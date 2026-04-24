@@ -29,6 +29,8 @@ if __name__ == "__main__":
     print("Iniciando os Sensores...")
 
     try:
+        while True:
+            time.sleep(1)
     except KeyboardInterrupt:
         print("Programa terminado pelo utilizador.")
         if cam:                              
