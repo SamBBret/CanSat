@@ -14,7 +14,7 @@ ser = None
 
 def setup():
 
-    timestamp = datetime.datetime.now(datetime.UTC)
+    timestamp = datetime.now(datetime.UTC)
     set_file()
 
     global cam
