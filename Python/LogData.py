@@ -12,7 +12,7 @@ def set_file():
     global PATH, LOG_FILE, log_thread
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     folder_path = timestamp
-    PATH = folder_path
+    PATH += f"/{folder_path}"
     os.makedirs(PATH, exist_ok=True)
     LOG_FILE = os.path.join(PATH, f"{timestamp}_voo_dados.txt")
 
