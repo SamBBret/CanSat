@@ -1,33 +1,41 @@
 from datetime import datetime
-from time import sleep
-from Cam import CAMERA
-from os import popen
-import serial
-import subprocess
+from threading import Thread
+from queue import Queue
+import os
 
-wait_time = 5
-cam = None
+log_queue = Queue()
+LOG_FILE = None
+PATH = None
+log_thread = None  
 
-ser = None
+def set_file():
+    global PATH, LOG_FILE, log_thread
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    folder_path = timestamp
+    PATH = folder_path
+    os.makedirs(PATH, exist_ok=True)
+    LOG_FILE = os.path.join(PATH, f"{timestamp}_voo_dados.txt")
 
+    log_thread = Thread(target=log_worker, args=(LOG_FILE,), daemon=True)
+    log_thread.start()
 
-def setup():
+def log_worker(filename):
+    while True:
+        json_data = log_queue.get()
+        if json_data is None:
+            break
+        timestamp = datetime.utcnow().isoformat()
+        try:
+            with open(filename, "a") as f:
+                f.write(f"{timestamp} | {json_data}\n")
+        except Exception as e:
+            print(f"[ERRO] Falha ao gravar dados no ficheiro: {e}")
+        log_queue.task_done()
 
-    timestamp = datetime.utcnow().isoformat()
-    global cam
-    cam = CAMERA(PATH)
-    cam.start_taking_photos_periodically(5)  # 15 segundos entre fotos!!
+def log_data_to_file(json_data):
+    log_queue.put(json_data)
 
-if __name__ == "__main__":
-    setup()
-    print("Programa Inicializado")
-    sleep(5)
-    print("Iniciando os Sensores...")
-
-    try:
-        while True:
-            update(wait_time)
-    except KeyboardInterrupt:
-        print("Programa terminado pelo utilizador.")
-        if cam:                              
-            cam.stop_taking_photos()
+def stop_logging():
+    log_queue.put(None)
+    if log_thread is not None:
+        log_thread.join()

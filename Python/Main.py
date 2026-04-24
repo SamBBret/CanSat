@@ -14,7 +14,10 @@ ser = None
 def setup():
 
     timestamp = datetime.utcnow().isoformat()
+    set_file()
+
     global cam
+    from LogData import PATH
     cam = CAMERA(PATH)
     cam.start_taking_photos_periodically(5)  # 15 segundos entre fotos!!
 
