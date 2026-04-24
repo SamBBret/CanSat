@@ -20,7 +20,7 @@ def setup():
 
     global cam
     from LogData import PATH
-    cam = CAMERA(PATH)
+    cam = CAMERA(PATH, PATH)
     cam.start_taking_photos_periodically(5)  # 15 segundos entre fotos!!
 
 if __name__ == "__main__":
