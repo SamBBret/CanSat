@@ -5,7 +5,7 @@ import os
 
 log_queue = Queue()
 LOG_FILE = None
-PATH = images
+PATH = "/home/cati/imagesCATI"
 log_thread = None  
 
 def set_file():
