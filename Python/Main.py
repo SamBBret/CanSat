@@ -26,8 +26,6 @@ def setup():
 if __name__ == "__main__":
     setup()
     print("Programa Inicializado")
-    sleep(5)
-    print("Iniciando os Sensores...")
 
     try:
         while True:

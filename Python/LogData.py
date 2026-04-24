@@ -5,7 +5,7 @@ import os
 
 log_queue = Queue()
 LOG_FILE = None
-PATH = None
+PATH = images
 log_thread = None  
 
 def set_file():
